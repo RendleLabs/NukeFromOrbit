@@ -1,0 +1,34 @@
+name: .NET Core
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 3.1.301
+    - name: Install dependencies
+      run: dotnet restore
+    - name: Nerdbank.GitVersioning
+      id: nbgv
+      uses: dotnet/nbgv@v0.3.1
+    - name: Build
+      run: dotnet build --configuration Release --no-restore 
+#    - name: Test
+#      run: dotnet test --configuration Release --no-build --verbosity normal test\RendleLabs.LegacyWorkspaceLoader.Tests
+    - name: Pack
+      run: dotnet pack --configuration Release --no-build -p:PackageVersion=${{ steps.nbgv.outputs.SimpleVersion }} --output . src\NukeFromOrbit\NukeFromOrbit.csproj
+    - name: Push
+      run: dotnet nuget push *.nupkg -s https://api.nuget.org/v3/index.json -k ${{ secrets.NUGET_API_KEY }} --skip-duplicate
