@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Abstractions;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace NukeFromOrbit
@@ -13,6 +14,7 @@ namespace NukeFromOrbit
         private readonly HashSet<string> _gitFiles;
         private readonly IConsole _console;
         private readonly StringComparison _stringComparison;
+        private readonly StringComparer _stringComparer;
 
         private Nuker(string workingDirectory, IFileSystem fileSystem, HashSet<string> gitFiles, IConsole console)
         {
@@ -22,9 +24,10 @@ namespace NukeFromOrbit
             _console = console;
             var isCaseSensitive = FileSystemUtil.IsCaseSensitive(workingDirectory);
             _stringComparison = isCaseSensitive ? StringComparison.CurrentCulture : StringComparison.CurrentCultureIgnoreCase;
+            _stringComparer = isCaseSensitive ? StringComparer.CurrentCulture : StringComparer.CurrentCultureIgnoreCase;
         }
         
-        public static async Task<Nuker> CreateAsync(string workingDirectory, IFileSystem fileSystem = null, IGitFileList gitFileList = null, IConsole console = null)
+        public static async Task<Nuker> CreateAsync(string workingDirectory, IFileSystem? fileSystem = null, IGitFileList? gitFileList = null, IConsole? console = null)
         {
             fileSystem ??= new FileSystem();
             gitFileList ??= new GitFileList(workingDirectory);
@@ -32,13 +35,15 @@ namespace NukeFromOrbit
             var gitFiles = await gitFileList.GetAsync();
             return new Nuker(workingDirectory, fileSystem, gitFiles, console);
         }
-
-        public void Nuke()
+        
+        public IReadOnlyCollection<DeleteItem> GetItemsToBeNuked()
         {
-            NukeDirectory(_workingDirectory);
+            var entries = new Dictionary<string, ItemType>(_stringComparer);
+            NukeDirectory(_workingDirectory, entries);
+            return entries.Select(pair => new DeleteItem(pair.Key, pair.Value)).ToList().AsReadOnly();
         }
 
-        private void NukeDirectory(string currentDirectory)
+        private void NukeDirectory(string currentDirectory, Dictionary<string, ItemType> entries)
         {
             foreach (var directory in _fileSystem.Directory.EnumerateDirectories(currentDirectory))
             {
@@ -49,49 +54,64 @@ namespace NukeFromOrbit
                 {
                     if (!_gitFiles.Contains(directory))
                     {
-                        try
-                        {
-                            _fileSystem.Directory.Delete(directory, true);
-                        }
-                        catch (Exception ex)
-                        {
-                            OutputDeleteError(directory, ex.Message);
-                        }
-                        OutputDeleted(directory);
+                        entries[directory] = ItemType.Directory;
                     }
                     else
                     {
-                        NukeCarefully(directory);
+                        NukeCarefully(directory, entries);
                     }
                 }
                 else
                 {
-                    NukeDirectory(directory);
+                    NukeDirectory(directory, entries);
                 }
             }
         }
 
-        private void NukeCarefully(string directory)
+        private void NukeCarefully(string directory, Dictionary<string, ItemType> entries)
         {
             foreach (var file in Directory.EnumerateFiles(directory))
             {
                 if (!_gitFiles.Contains(file))
                 {
-                    try
-                    {
-                        _fileSystem.File.Delete(file);
-                    }
-                    catch (Exception ex)
-                    {
-                        OutputDeleteError(file, ex.Message);
-                    }
-                    OutputDeleted(file);
+                    entries[file] = ItemType.File;
                 }
             }
 
             foreach (var subDirectory in Directory.EnumerateDirectories(directory))
             {
-                NukeCarefully(subDirectory);
+                NukeCarefully(subDirectory, entries);
+            }
+        }
+
+        public void NukeItems(IEnumerable<DeleteItem> items)
+        {
+            foreach (var item in items)
+            {
+                if (item.Type == ItemType.Directory)
+                {
+                    try
+                    {
+                        _fileSystem.Directory.Delete(item.Path, true);
+                        OutputDeleted(item.Path);
+                    }
+                    catch (Exception ex)
+                    {
+                        OutputDeleteError(item.Path, ex.Message);
+                    }
+                }
+                else
+                {
+                    try
+                    {
+                        _fileSystem.File.Delete(item.Path);
+                        OutputDeleted(item.Path);
+                    }
+                    catch (Exception ex)
+                    {
+                        OutputDeleteError(item.Path, ex.Message);
+                    }
+                }
             }
         }
 

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -56,7 +55,7 @@ namespace NukeFromOrbit
             {
                 for (var parent = Path.GetDirectoryName(line); InWorkingDirectory(parent); parent = Path.GetDirectoryName(parent))
                 {
-                    set.Add(parent);
+                    set.Add(parent!);
                 }
             }
             
@@ -70,25 +69,5 @@ namespace NukeFromOrbit
             return directory.StartsWith(_workingDirectory, _stringComparison);
         }
 
-    }
-
-    public static class FileSystemUtil
-    {
-        public static bool IsCaseSensitive(string directory)
-        {
-            if (!Directory.Exists(directory)) throw new InvalidOperationException("Directory does not exist.");
-            
-            if (directory.Where(char.IsLetter).Any(char.IsLower))
-            {
-                if (Directory.Exists(directory.ToUpper(CultureInfo.CurrentCulture))) return false;
-            }
-            else
-            {
-                if (Directory.Exists(directory.ToLower(CultureInfo.CurrentCulture))) return false;
-            }
-
-            return true;
-        }
-        
     }
 }

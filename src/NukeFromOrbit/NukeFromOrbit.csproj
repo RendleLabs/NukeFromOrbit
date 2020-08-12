@@ -14,6 +14,7 @@
 
   <ItemGroup>
     <PackageReference Include="CliWrap" Version="3.1.0" />
+    <PackageReference Include="System.CommandLine" Version="2.0.0-beta1.20371.2" />
     <PackageReference Include="System.IO.Abstractions" Version="12.1.1" />
   </ItemGroup>
 
