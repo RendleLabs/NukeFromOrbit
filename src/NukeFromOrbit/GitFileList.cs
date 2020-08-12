@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Abstractions;
 using System.Linq;
 using System.Threading.Tasks;
 using CliWrap;
@@ -14,16 +15,36 @@ namespace NukeFromOrbit
         private readonly string _workingDirectory;
         private readonly StringComparison _stringComparison;
         private readonly StringComparer _stringComparer;
+        private readonly Func<Task<HashSet<string>>> _listFiles;
 
-        public GitFileList(string workingDirectory)
+        public GitFileList(string workingDirectory, IFileSystem? fileSystem = null, Func<Task<HashSet<string>>> listFiles = null)
         {
             _workingDirectory = workingDirectory;
-            var isCaseSensitiveFileSystem = FileSystemUtil.IsCaseSensitive(workingDirectory);
+            _listFiles = listFiles ?? ListFileAsync;
+            
+            var isCaseSensitiveFileSystem = FileSystemUtil.IsCaseSensitive(fileSystem ?? new FileSystem(), workingDirectory);
             _stringComparison = isCaseSensitiveFileSystem ? StringComparison.CurrentCulture : StringComparison.CurrentCultureIgnoreCase;
             _stringComparer = isCaseSensitiveFileSystem ? StringComparer.CurrentCulture : StringComparer.CurrentCultureIgnoreCase;
         }
         
         public async Task<HashSet<string>> GetAsync()
+        {
+            var set = await _listFiles();
+
+            if (set.Count == 0) return set;
+
+            foreach (var line in set.ToArray())
+            {
+                for (var parent = Path.GetDirectoryName(line); InWorkingDirectory(parent); parent = Path.GetDirectoryName(parent))
+                {
+                    set.Add(parent!);
+                }
+            }
+            
+            return set;
+        }
+
+        private async Task<HashSet<string>> ListFileAsync()
         {
             var set = new HashSet<string>(_stringComparer);
 
@@ -46,19 +67,7 @@ namespace NukeFromOrbit
             if (result.ExitCode != 0)
             {
                 set.Clear();
-                return set;
             }
-
-            if (set.Count == 0) return set;
-
-            foreach (var line in set.ToArray())
-            {
-                for (var parent = Path.GetDirectoryName(line); InWorkingDirectory(parent); parent = Path.GetDirectoryName(parent))
-                {
-                    set.Add(parent!);
-                }
-            }
-            
             return set;
         }
 

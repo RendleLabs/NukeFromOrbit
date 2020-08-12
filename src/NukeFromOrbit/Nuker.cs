@@ -22,7 +22,7 @@ namespace NukeFromOrbit
             _fileSystem = fileSystem;
             _gitFiles = gitFiles;
             _console = console;
-            var isCaseSensitive = FileSystemUtil.IsCaseSensitive(workingDirectory);
+            var isCaseSensitive = FileSystemUtil.IsCaseSensitive(_fileSystem, workingDirectory);
             _stringComparison = isCaseSensitive ? StringComparison.CurrentCulture : StringComparison.CurrentCultureIgnoreCase;
             _stringComparer = isCaseSensitive ? StringComparer.CurrentCulture : StringComparer.CurrentCultureIgnoreCase;
         }
@@ -70,7 +70,7 @@ namespace NukeFromOrbit
 
         private void NukeCarefully(string directory, Dictionary<string, ItemType> entries)
         {
-            foreach (var file in Directory.EnumerateFiles(directory))
+            foreach (var file in _fileSystem.Directory.EnumerateFiles(directory))
             {
                 if (!_gitFiles.Contains(file))
                 {
@@ -78,7 +78,7 @@ namespace NukeFromOrbit
                 }
             }
 
-            foreach (var subDirectory in Directory.EnumerateDirectories(directory))
+            foreach (var subDirectory in _fileSystem.Directory.EnumerateDirectories(directory))
             {
                 NukeCarefully(subDirectory, entries);
             }

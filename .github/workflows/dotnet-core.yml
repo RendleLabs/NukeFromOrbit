@@ -26,8 +26,8 @@ jobs:
       uses: dotnet/nbgv@v0.3.1
     - name: Build
       run: dotnet build --configuration Release --no-restore 
-#    - name: Test
-#      run: dotnet test --configuration Release --no-build --verbosity normal test\RendleLabs.LegacyWorkspaceLoader.Tests
+   - name: Test
+     run: dotnet test --configuration Release --no-build --verbosity normal test\NukeFromOrbit.Tests
     - name: Pack
       run: dotnet pack --configuration Release --no-build -p:PackageVersion=${{ steps.nbgv.outputs.SimpleVersion }} --output . src\NukeFromOrbit\NukeFromOrbit.csproj
     - name: Push

@@ -19,8 +19,10 @@ namespace NukeFromOrbit
         {
             var command = new RootCommand
             {
-                new Option<bool>(new[]{"--yes", "-y"}, () => false, "Don't ask for confirmation, just nuke it."),
-                new Option<bool>(new[]{"--dry-run", "-n"}, () => false, "List items that will be nuked but don't nuke them."),
+                new Option<bool>(new[]{"--yes", "-y"}, () => false,
+                    "Don't ask for confirmation, just nuke it."),
+                new Option<bool>(new[]{"--dry-run", "-n"}, () => false,
+                    "List items that will be nuked but don't nuke them."),
                 new Argument<string>("workingDirectory", () => Environment.CurrentDirectory)
             };
 
