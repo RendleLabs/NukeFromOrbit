@@ -17,7 +17,7 @@ namespace NukeFromOrbit.Tests
         [Fact]
         public async Task GetsItemsToBeNuked()
         {
-            var fakeFileSystem = new FakeFileSystem(Files);
+            var fakeFileSystem = FakeFileSystem.Fake(Files);
             var fakeGitFileList = new FakeGitFileList();
             var fakeConsole = Substitute.For<IConsole>();
             
@@ -31,7 +31,7 @@ namespace NukeFromOrbit.Tests
         [Fact]
         public async Task NukesItems()
         {
-            var fakeFileSystem = new FakeFileSystem(Files);
+            var fakeFileSystem = FakeFileSystem.Fake(Files);
             var fakeGitFileList = new FakeGitFileList();
             var fakeConsole = Substitute.For<IConsole>();
             

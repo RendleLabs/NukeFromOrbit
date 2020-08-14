@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO.Abstractions;
 using System.Threading.Tasks;
 using NSubstitute;
 using Xunit;
@@ -20,7 +21,7 @@ namespace NukeFromOrbit.Tests
         [Fact]
         public async Task GetsItemsToBeNuked()
         {
-            var fakeFileSystem = new FakeFileSystem(Files);
+            var fakeFileSystem = FakeFileSystem.Fake(Files);
             
             var gitFileList = FakeFileList(fakeFileSystem);
 
@@ -34,7 +35,7 @@ namespace NukeFromOrbit.Tests
             Assert.DoesNotContain(actual, i => i.Path == @"D:\Fake\src\Fake\bin\IAmVersionControlled.txt");
         }
 
-        private static GitFileList FakeFileList(FakeFileSystem fakeFileSystem)
+        private static GitFileList FakeFileList(IFileSystem fakeFileSystem)
         {
             var gitFiles = new HashSet<string>(Files, StringComparer.OrdinalIgnoreCase);
             gitFiles.Remove(@"D:\Fake\src\Fake\bin\Debug\Fake.dll");
@@ -47,7 +48,7 @@ namespace NukeFromOrbit.Tests
         [Fact]
         public async Task NukesItems()
         {
-            var fakeFileSystem = new FakeFileSystem(Files);
+            var fakeFileSystem = FakeFileSystem.Fake(Files);
             var gitFileList = FakeFileList(fakeFileSystem);
             var fakeConsole = Substitute.For<IConsole>();
             

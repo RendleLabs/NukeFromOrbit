@@ -5,21 +5,38 @@ using NSubstitute;
 
 namespace NukeFromOrbit.Tests
 {
-    internal class FakeFileSystem : IFileSystem
+    internal static class FakeFileSystem
     {
-        public FakeFileSystem(IEnumerable<string> fileList)
+        public static IFileSystem Fake(IEnumerable<string> fileList)
         {
             var files = fileList.ToArray();
             var directories = AllDirectories(files).Distinct().ToArray();
 
-            Path = new PathWrapper(this);
-            File = Substitute.For<IFile>();
-            Directory = Substitute.For<IDirectory>();
-            Directory.EnumerateDirectories(Arg.Any<string>())
-                .Returns(c => directories.Where(d => Path.GetDirectoryName(d) == c.Arg<string>()).Distinct());
-            Directory.EnumerateFiles(Arg.Any<string>())
-                .Returns(c => files.Where(f => Path.GetDirectoryName(f) == c.Arg<string>()).Distinct());
-            Directory.Exists(Arg.Any<string>()).Returns(true);
+            var fileSystem = Substitute.For<IFileSystem>();
+            var path = new PathWrapper(fileSystem);
+            var file = Substitute.For<IFile>();
+            
+            var directory = FakeDirectory(directories, path, files);
+
+            fileSystem.Path.Returns(path);
+            fileSystem.Directory.Returns(directory);
+            fileSystem.File.Returns(file);
+            return fileSystem;
+        }
+
+        private static IDirectory FakeDirectory(string[] directories, IPath path, string[] files)
+        {
+            var directory = Substitute.For<IDirectory>();
+            
+            directory.EnumerateDirectories(Arg.Any<string>())
+                .Returns(c => directories.Where(d => path.GetDirectoryName(d) == c.Arg<string>()).Distinct());
+            
+            directory.EnumerateFiles(Arg.Any<string>())
+                .Returns(c => files.Where(f => path.GetDirectoryName(f) == c.Arg<string>()).Distinct());
+            
+            directory.Exists(Arg.Any<string>()).Returns(true);
+            
+            return directory;
         }
 
         private static IEnumerable<string> AllDirectories(IEnumerable<string> source)
@@ -34,14 +51,5 @@ namespace NukeFromOrbit.Tests
                 yield return d;
             }
         }
-
-        public IFile File { get; }
-        public IDirectory Directory { get; }
-        public IFileInfoFactory FileInfo { get; }
-        public IFileStreamFactory FileStream { get; }
-        public IPath Path { get; }
-        public IDirectoryInfoFactory DirectoryInfo { get; }
-        public IDriveInfoFactory DriveInfo { get; }
-        public IFileSystemWatcherFactory FileSystemWatcher { get; }
     }
 }

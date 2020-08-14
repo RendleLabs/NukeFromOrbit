@@ -13,16 +13,18 @@ namespace NukeFromOrbit
         private static readonly string Bin = $"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}";
         private static readonly string Obj = $"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}";
         private readonly string _workingDirectory;
+        private readonly IFileSystem _fileSystem;
         private readonly StringComparison _stringComparison;
         private readonly StringComparer _stringComparer;
         private readonly Func<Task<HashSet<string>>> _listFiles;
 
-        public GitFileList(string workingDirectory, IFileSystem? fileSystem = null, Func<Task<HashSet<string>>> listFiles = null)
+        public GitFileList(string workingDirectory, IFileSystem? fileSystem = null, Func<Task<HashSet<string>>>? listFiles = null)
         {
             _workingDirectory = workingDirectory;
+            _fileSystem = fileSystem ?? new FileSystem();
             _listFiles = listFiles ?? ListFileAsync;
             
-            var isCaseSensitiveFileSystem = FileSystemUtil.IsCaseSensitive(fileSystem ?? new FileSystem(), workingDirectory);
+            var isCaseSensitiveFileSystem = _fileSystem.IsCaseSensitive(workingDirectory);
             _stringComparison = isCaseSensitiveFileSystem ? StringComparison.CurrentCulture : StringComparison.CurrentCultureIgnoreCase;
             _stringComparer = isCaseSensitiveFileSystem ? StringComparer.CurrentCulture : StringComparer.CurrentCultureIgnoreCase;
         }
@@ -35,7 +37,7 @@ namespace NukeFromOrbit
 
             foreach (var line in set.ToArray())
             {
-                for (var parent = Path.GetDirectoryName(line); InWorkingDirectory(parent); parent = Path.GetDirectoryName(parent))
+                for (var parent = _fileSystem.Path.GetDirectoryName(line); InWorkingDirectory(parent); parent = _fileSystem.Path.GetDirectoryName(parent))
                 {
                     set.Add(parent!);
                 }
@@ -47,16 +49,14 @@ namespace NukeFromOrbit
         private async Task<HashSet<string>> ListFileAsync()
         {
             var set = new HashSet<string>(_stringComparer);
-
+            
             var result = await Cli.Wrap("git")
                 .WithArguments("ls-files")
                 .WithWorkingDirectory(_workingDirectory)
                 .WithStandardOutputPipe(PipeTarget.ToDelegate(line =>
                 {
-                    if (Path.DirectorySeparatorChar != '/')
-                    {
-                        line = line.Replace('/', Path.DirectorySeparatorChar);
-                    }
+                    line = _fileSystem.Path.Normalize(line);
+                    
                     if (line.Contains(Bin) || line.Contains(Obj))
                     {
                         set.Add(Path.Combine(_workingDirectory, line));

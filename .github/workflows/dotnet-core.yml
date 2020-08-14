@@ -25,7 +25,7 @@ jobs:
       id: nbgv
       uses: dotnet/nbgv@v0.3.1
     - name: Build
-      run: dotnet build --configuration Release --no-restore 
+      run: dotnet build --configuration Release --no-restore -p:AssemblyVersion=${{ steps.nbgv.outputs.SimpleVersion }}
    - name: Test
      run: dotnet test --configuration Release --no-build --verbosity normal test\NukeFromOrbit.Tests
     - name: Pack

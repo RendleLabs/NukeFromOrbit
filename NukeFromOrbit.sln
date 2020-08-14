@@ -11,6 +11,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{6BBFC774-5
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NukeFromOrbit.Tests", "test\NukeFromOrbit.Tests\NukeFromOrbit.Tests.csproj", "{62D249F3-4174-472F-A2EC-7010B95E67D4}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ci", "ci", "{11221A33-AEF3-41C9-A4AB-9559B4887DE5}"
+ProjectSection(SolutionItems) = preProject
+	.github\workflows\dotnet-core.yml = .github\workflows\dotnet-core.yml
+EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

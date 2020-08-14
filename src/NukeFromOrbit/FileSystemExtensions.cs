@@ -6,9 +6,9 @@ using System.Linq;
 
 namespace NukeFromOrbit
 {
-    public static class FileSystemUtil
+    public static class FileSystemExtensions
     {
-        public static bool IsCaseSensitive(IFileSystem fileSystem, string directory)
+        public static bool IsCaseSensitive(this IFileSystem fileSystem, string directory)
         {
             if (!fileSystem.Directory.Exists(directory)) throw new InvalidOperationException("Directory does not exist.");
             
@@ -22,6 +22,13 @@ namespace NukeFromOrbit
             }
 
             return true;
+        }
+
+        public static string Normalize(this IPath path, string pathString)
+        {
+            return path.DirectorySeparatorChar != '/'
+                ? pathString.Replace('/', path.DirectorySeparatorChar)
+                : pathString;
         }
     }
 }
