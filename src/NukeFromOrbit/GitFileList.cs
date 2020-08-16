@@ -53,6 +53,7 @@ namespace NukeFromOrbit
             var result = await Cli.Wrap("git")
                 .WithArguments("ls-files")
                 .WithWorkingDirectory(_workingDirectory)
+                .WithValidation(CommandResultValidation.None)
                 .WithStandardOutputPipe(PipeTarget.ToDelegate(line =>
                 {
                     line = _fileSystem.Path.Normalize(line);
