@@ -12,6 +12,7 @@ namespace NukeFromOrbit.Tests
             @"D:\Fake\src\Fake\Fake.cs",
             @"D:\Fake\src\Fake\bin\Debug\Fake.dll",
             @"D:\Fake\src\Fake\obj\project.assets.json",
+            @"D:\Fake\src\Fake\node_modules\foo\bin\foo.js",
         };
         
         [Fact]
@@ -26,6 +27,7 @@ namespace NukeFromOrbit.Tests
             var actual = nuker.GetItemsToBeNuked();
             Assert.Contains(actual, i => i.Path == @"D:\Fake\src\Fake\bin" && i.Type == ItemType.Directory);
             Assert.Contains(actual, i => i.Path == @"D:\Fake\src\Fake\obj" && i.Type == ItemType.Directory);
+            Assert.DoesNotContain(actual, i => i.Path == @"D:\Fake\src\Fake\node_modules\foo\bin");
         }
         
         [Fact]
@@ -42,6 +44,7 @@ namespace NukeFromOrbit.Tests
 
             fakeFileSystem.Directory.Received().Delete(@"D:\Fake\src\Fake\bin", true);
             fakeFileSystem.Directory.Received().Delete(@"D:\Fake\src\Fake\obj", true);
+            fakeFileSystem.Directory.DidNotReceive().Delete(@"D:\Fake\src\Fake\node_modules\foo\bin");
         }
     }
 }

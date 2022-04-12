@@ -48,7 +48,11 @@ namespace NukeFromOrbit
             foreach (var directory in _fileSystem.Directory.EnumerateDirectories(currentDirectory))
             {
                 var name = _fileSystem.Path.GetFileName(directory);
+                
                 if (name is null) continue;
+                
+                // Don't mess with node_modules
+                if (name.Equals("node_modules", StringComparison.InvariantCultureIgnoreCase)) continue;
 
                 if (name.Equals("bin", _stringComparison) || name.Equals("obj", _stringComparison))
                 {
