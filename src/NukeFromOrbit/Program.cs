@@ -40,6 +40,12 @@ namespace NukeFromOrbit
         {
             var nuker = await Nuker.CreateAsync(workingDirectory);
             var items = nuker.GetItemsToBeNuked();
+            if (items.Count == 0)
+            {
+                Console.WriteLine("No bin or obj directories found.");
+                Console.WriteLine();
+                return;
+            }
             if (dryRun)
             {
                 OutputDryRun(items);
